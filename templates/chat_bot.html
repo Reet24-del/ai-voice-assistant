@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>30 Days of AI Voice Agents - Day 10: Conversational Bot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .chat-container {
+            height: 500px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            max-width: 80%;
+        }
+        
+        .message.user {
+            margin-left: auto;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 18px 18px 5px 18px;
+            text-align: right;
+        }
+        
+        .message.assistant {
+            margin-right: auto;
+            background-color: #e9ecef;
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 18px 18px 18px 5px;
+        }
+        
+        .message-time {
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+        
+        .recording-indicator {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .recording-animation {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #dc3545;
+            margin: 0 auto 10px;
+            animation: pulse 1.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(1.1);
+            }
+        }
+        
+        .session-info {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .voice-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .record-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            font-size: 1.5em;
+            transition: all 0.3s ease;
+        }
+        
+        .record-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .record-btn.recording {
+            background-color: #dc3545;
+            color: white;
+            animation: pulse 1s ease-in-out infinite alternate;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="mb-0 text-center">
+                            <i class="fas fa-robot me-2"></i>
+                            30 Days of AI Voice Agents - Day 10: Conversational Bot
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <!-- Session Info -->
+                        <div class="session-info">
+                            <h5><i class="fas fa-comments me-2"></i>Chat Session</h5>
+                            <p class="mb-1"><strong>Session ID:</strong> <span id="sessionId">Loading...</span></p>
+                            <p class="mb-0"><strong>Status:</strong> Ready for conversation</p>
+                        </div>
+                        
+                        <!-- Voice Controls -->
+                        <div class="voice-controls justify-content-center">
+                            <button id="recordBtn" class="btn btn-success record-btn" title="Hold to record">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <div class="flex-grow-1">
+                                <select id="voiceSelect" class="form-select">
+                                    <option value="en-US-sarah">Samantha (US)</option>
+                                    <option value="en-US-john">Cooper (US)</option>
+                                    <option value="en-GB-emma">Hazel (UK)</option>
+                                    <option value="en-US-david">Daniel (US)</option>
+                                    <option value="en-US-jenny">Julia (US)</option>
+                                    <option value="en-AU-william">Shane (AU)</option>
+                                </select>
+                            </div>
+                            <button id="clearChatBtn" class="btn btn-outline-danger" title="Clear Chat History">
+                                <i class="fas fa-trash-alt"></i> Clear
+                            </button>
+                        </div>
+                        
+                        <!-- Recording Indicator -->
+                        <div id="recordingIndicator" class="recording-indicator">
+                            <div class="recording-animation"></div>
+                            <h5>🎤 Recording...</h5>
+                            <p class="text-muted">Release button when finished</p>
+                        </div>
+                        
+                        <!-- Processing Status -->
+                        <div id="processingStatus" class="alert alert-info" style="display: none;">
+                            <div class="d-flex align-items-center">
+                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                <span id="processingText">Processing your message...</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Chat Container -->
+                        <div id="chatContainer" class="chat-container">
+                            <div class="text-center text-muted p-4">
+                                <i class="fas fa-comments fa-3x mb-3"></i>
+                                <h5>Start a conversation!</h5>
+                                <p>Hold the record button and speak your message. The AI will remember our conversation history.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Audio Player -->
+                        <audio id="audioPlayer" controls class="w-100 mt-3" style="display: none;">
+                            Your browser does not support the audio element.
+                        </audio>
+                        
+                        <!-- Instructions -->
+                        <div class="mt-4">
+                            <h6><i class="fas fa-info-circle me-2"></i>How to Use:</h6>
+                            <ul class="small">
+                                <li><strong>Record:</strong> Hold the microphone button and speak your message</li>
+                                <li><strong>Release:</strong> Let go of the button when you're done speaking</li>
+                                <li><strong>Listen:</strong> The AI will respond with voice and text</li>
+                                <li><strong>Continue:</strong> Have a natural conversation - the AI remembers context!</li>
+                                <li><strong>Clear:</strong> Use the trash button to start a new conversation</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let sessionId = generateSessionId();
+        let mediaRecorder;
+        let audioChunks = [];
+        let stream;
+        let isRecording = false;
+        let isProcessing = false;
+        
+        // DOM elements
+        const recordBtn = document.getElementById('recordBtn');
+        const chatContainer = document.getElementById('chatContainer');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const voiceSelect = document.getElementById('voiceSelect');
+        const clearChatBtn = document.getElementById('clearChatBtn');
+        const recordingIndicator = document.getElementById('recordingIndicator');
+        const processingStatus = document.getElementById('processingStatus');
+        const processingText = document.getElementById('processingText');
+        const sessionIdElement = document.getElementById('sessionId');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            sessionIdElement.textContent = sessionId;
+            updateURL();
+            
+            // Load chat history if any
+            loadChatHistory();
+            
+            // Set up event listeners
+            recordBtn.addEventListener('mousedown', startRecording);
+            recordBtn.addEventListener('mouseup', stopRecording);
+            recordBtn.addEventListener('touchstart', startRecording);
+            recordBtn.addEventListener('touchend', stopRecording);
+            
+            clearChatBtn.addEventListener('click', clearChat);
+            
+            // Auto-start recording after TTS playback
+            audioPlayer.addEventListener('ended', () => {
+                setTimeout(() => {
+                    if (!isProcessing) {
+                        showRecordingHint();
+                    }
+                }, 1000);
+            });
+        });
+        
+        function generateSessionId() {
+            // Get session ID from URL or generate new one
+            const urlParams = new URLSearchParams(window.location.search);
+            const existingSessionId = urlParams.get('session');
+            
+            if (existingSessionId) {
+                return existingSessionId;
+            }
+            
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+        
+        function updateURL() {
+            const url = new URL(window.location);
+            url.searchParams.set('session', sessionId);
+            window.history.replaceState(null, '', url);
+        }
+        
+        async function loadChatHistory() {
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/agent/chat/${sessionId}/history`);
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    displayChatHistory(data.chat_history);
+                }
+            } catch (error) {
+                console.log('No existing chat history found');
+            }
+        }
+        
+        function displayChatHistory(chatHistory) {
+            if (chatHistory.length > 0) {
+                chatContainer.innerHTML = '';
+                
+                chatHistory.forEach(message => {
+                    addMessageToChat(message.role, message.content, message.timestamp);
+                });
+                
+                scrollToBottom();
+            }
+        }
+        
+        function addMessageToChat(role, content, timestamp) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const timeString = timestamp ? new Date(timestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
+            
+            messageDiv.innerHTML = `
+                <div>${content}</div>
+                <div class="message-time">${timeString}</div>
+            `;
+            
+            chatContainer.appendChild(messageDiv);
+            scrollToBottom();
+        }
+        
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function showRecordingHint() {
+            const hint = document.createElement('div');
+            hint.className = 'alert alert-info alert-dismissible fade show';
+            hint.innerHTML = `
+                <i class="fas fa-microphone me-2"></i>
+                Ready for your next message! Hold the record button to continue the conversation.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            chatContainer.appendChild(hint);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                if (hint.parentNode) {
+                    hint.remove();
+                }
+            }, 3000);
+        }
+        
+        async function startRecording() {
+            if (isRecording || isProcessing) return;
+            
+            try {
+                // Clear previous recording
+                audioChunks = [];
+                
+                // Get user media
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    } 
+                });
+                
+                // Create MediaRecorder
+                const options = {
+                    mimeType: 'audio/webm;codecs=opus'
+                };
+                
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'audio/webm';
+                    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                        delete options.mimeType;
+                    }
+                }
+                
+                mediaRecorder = new MediaRecorder(stream, options);
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = processRecording;
+                
+                // Start recording
+                mediaRecorder.start();
+                isRecording = true;
+                
+                // Update UI
+                recordBtn.classList.add('recording');
+                recordBtn.innerHTML = '<i class="fas fa-stop"></i>';
+                recordingIndicator.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error starting recording:', error);
+                alert('Failed to access microphone. Please check permissions.');
+            }
+        }
+        
+        function stopRecording() {
+            if (!isRecording) return;
+            
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+            
+            // Clean up stream
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
+            isRecording = false;
+            
+            // Update UI
+            recordBtn.classList.remove('recording');
+            recordBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+            recordingIndicator.style.display = 'none';
+        }
+        
+        async function processRecording() {
+            if (audioChunks.length === 0) return;
+            
+            isProcessing = true;
+            
+            // Show processing status
+            processingStatus.style.display = 'block';
+            processingText.textContent = 'Transcribing and processing with AI...';
+            
+            try {
+                // Create audio blob
+                const audioBlob = new Blob(audioChunks, { 
+                    type: mediaRecorder.mimeType || 'audio/webm' 
+                });
+                
+                // Check if audio is too small
+                if (audioBlob.size < 1000) {
+                    throw new Error('Recording too short. Please record at least 1-2 seconds.');
+                }
+                
+                // Create FormData
+                const formData = new FormData();
+                const timestamp = new Date().getTime();
+                const filename = `chat_${timestamp}.webm`;
+                formData.append('audio_file', audioBlob, filename);
+                formData.append('voice_id', voiceSelect.value);
+                formData.append('speed', '100');
+                
+                // Send to chat endpoint
+                const response = await fetch(`http://127.0.0.1:8000/agent/chat/${sessionId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    // Add user message to chat
+                    addMessageToChat('user', data.transcription);
+                    
+                    // Add assistant response to chat
+                    addMessageToChat('assistant', data.response);
+                    
+                    // Play TTS audio
+                    if (data.audio_url) {
+                        audioPlayer.src = data.audio_url;
+                        audioPlayer.style.display = 'block';
+                        audioPlayer.load();
+                        
+                        try {
+                            await audioPlayer.play();
+                        } catch (playError) {
+                            console.log('Auto-play blocked by browser:', playError);
+                        }
+                    }
+                    
+                } else {
+                    throw new Error(data.detail || data.message || 'Failed to process recording');
+                }
+                
+            } catch (error) {
+                console.error('Processing error:', error);
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'alert alert-danger';
+                errorDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Error:</strong> ${error.message}
+                `;
+                chatContainer.appendChild(errorDiv);
+                scrollToBottom();
+            } finally {
+                // Hide processing status
+                processingStatus.style.display = 'none';
+                isProcessing = false;
+            }
+        }
+        
+        async function clearChat() {
+            if (!confirm('Are you sure you want to clear the chat history?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/agent/chat/${sessionId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Clear chat container
+                    chatContainer.innerHTML = `
+                        <div class="text-center text-muted p-4">
+                            <i class="fas fa-comments fa-3x mb-3"></i>
+                            <h5>Start a conversation!</h5>
+                            <p>Hold the record button and speak your message. The AI will remember our conversation history.</p>
+                        </div>
+                    `;
+                    
+                    // Generate new session ID
+                    sessionId = generateSessionId();
+                    sessionIdElement.textContent = sessionId;
+                    updateURL();
+                    
+                    // Hide audio player
+                    audioPlayer.style.display = 'none';
+                    
+                } else {
+                    throw new Error(data.detail || 'Failed to clear chat');
+                }
+                
+            } catch (error) {
+                console.error('Clear chat error:', error);
+                alert('Failed to clear chat: ' + error.message);
+            }
+        }
+        
+        // Prevent context menu on record button (for mobile)
+        recordBtn.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+        
+        // Handle visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && isRecording) {
+                stopRecording();
+            }
+        });
+        
+        console.log('🤖 Conversational AI Voice Agent loaded!');
+        console.log(`📱 Session ID: ${sessionId}`);
+        console.log('🎤 Hold the record button to start talking!');
+    </script>
+</body>
+</html>

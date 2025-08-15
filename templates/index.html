@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Web App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h1 class="text-center mb-0">Python Web Application</h1>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <h3>Welcome to Your Flask App!</h3>
+                            <p class="text-muted">This is a basic web application built with Flask backend and vanilla JavaScript frontend.</p>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button id="fetchDataBtn" class="btn btn-primary w-100">Fetch Data from API</button>
+                            </div>
+                            <div class="col-md-6">
+                                <button id="clearDataBtn" class="btn btn-secondary w-100">Clear Data</button>
+                            </div>
+                        </div>
+                        
+                        <div id="apiResponse" class="mt-4"></div>
+                        
+                        <!-- TTS Section -->
+                        <div class="mt-5">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="mb-0">🎵 Text-to-Speech</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="ttsText" class="form-label">Enter text to convert to speech:</label>
+                                        <textarea id="ttsText" class="form-control" rows="3" placeholder="Type your text here..."></textarea>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="voiceSelect" class="form-label">Voice:</label>
+                                            <select id="voiceSelect" class="form-select">
+                                                <option value="en-US-sarah">Samantha (US)</option>
+                                                <option value="en-US-john">Cooper (US)</option>
+                                                <option value="en-GB-emma">Hazel (UK)</option>
+                                                <option value="en-US-david">Daniel (US)</option>
+                                                <option value="en-US-jenny">Julia (US)</option>
+                                                <option value="en-AU-william">Shane (AU)</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="speedRange" class="form-label">Speed: <span id="speedValue">100</span>%</label>
+                                            <input type="range" id="speedRange" class="form-range" min="50" max="150" value="100">
+                                        </div>
+                                    </div>
+                                    <button id="generateTtsBtn" class="btn btn-success w-100 mb-3">
+                                        <i class="fas fa-microphone"></i> Generate Speech
+                                    </button>
+                                    <div id="ttsResponse" class="mt-3"></div>
+                                    <audio id="audioPlayer" controls class="w-100 mt-3" style="display: none;">
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Transcription Section -->
+                        <div class="mt-5">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="mb-0">🎯 Speech-to-Text Transcription</h4>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted mb-4">Record your voice and get an instant transcription!</p>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <button id="startTranscribeRecordingBtn" class="btn btn-success w-100">
+                                                <i class="fas fa-microphone"></i> Start Recording for Transcription
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <button id="stopTranscribeRecordingBtn" class="btn btn-secondary w-100" disabled>
+                                                <i class="fas fa-stop"></i> Stop Recording
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="transcribeRecordingStatus" class="alert alert-info" style="display: none;">
+                                        <div class="d-flex align-items-center">
+                                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                            <span id="transcribeRecordingStatusText">Preparing to record...</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="transcribeRecordingResponse" class="mt-3"></div>
+                                    
+                                    <!-- Transcription Status Section -->
+                                    <div id="transcriptionStatus" class="mt-3" style="display: none;">
+                                        <div class="alert alert-info">
+                                            <div class="d-flex align-items-center">
+                                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                                <span id="transcriptionStatusText">Transcribing audio...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="transcriptionResponse" class="mt-3"></div>
+                                    
+                                    <audio id="transcribeAudioPlayer" controls class="w-100 mt-3" style="display: none;">
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- LLM Audio Query Section -->
+                        <div class="mt-5">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h1 class="mb-0">🤖 LLM Audio Assistant - Voice to AI Voice</h1>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted mb-4">Ask the AI assistant a question with your voice and hear the response back in a Murf AI voice!</p>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <button id="startLlmAudioRecordingBtn" class="btn btn-success w-100">
+                                                <i class="fas fa-microphone"></i> Start Recording
+                                            </button>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button id="stopLlmAudioRecordingBtn" class="btn btn-secondary w-100" disabled>
+                                                <i class="fas fa-stop"></i> Stop Recording
+                                            </button>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select id="llmAudioVoiceSelect" class="form-select">
+                                                <option value="en-US-sarah">Samantha (US)</option>
+                                                <option value="en-US-john">Cooper (US)</option>
+                                                <option value="en-GB-emma">Hazel (UK)</option>
+                                                <option value="en-US-david">Daniel (US)</option>
+                                                <option value="en-US-jenny">Julia (US)</option>
+                                                <option value="en-AU-william">Shane (AU)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="llmAudioRecordingStatus" class="alert alert-info" style="display: none;">
+                                        <div class="d-flex align-items-center">
+                                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                            <span id="llmAudioRecordingStatusText">Preparing to record...</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="llmAudioRecordingResponse" class="mt-3"></div>
+                                    
+                                    <!-- LLM Processing Status Section -->
+                                    <div id="llmAudioProcessingStatus" class="mt-3" style="display: none;">
+                                        <div class="alert alert-info">
+                                            <div class="d-flex align-items-center">
+                                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                                <span id="llmAudioProcessingStatusText">Processing with AI...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="llmAudioProcessingResponse" class="mt-3"></div>
+                                    
+                                    <audio id="llmAudioPlayer" controls class="w-100 mt-3" style="display: none;">
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Echo Bot v2 Section with TTS -->
+                        <div class="mt-5">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h1 class="mb-0">🎙️ Echo Bot v2 - TTS Echo</h1>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted mb-4">Record your voice, get transcription, and hear it back in a Murf AI voice!</p>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <button id="startEchoTtsRecordingBtn" class="btn btn-primary w-100">
+                                                <i class="fas fa-microphone"></i> Start Recording
+                                            </button>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button id="stopEchoTtsRecordingBtn" class="btn btn-secondary w-100" disabled>
+                                                <i class="fas fa-stop"></i> Stop Recording
+                                            </button>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select id="echoTtsVoiceSelect" class="form-select">
+                                                <option value="en-US-sarah">Samantha (US)</option>
+                                                <option value="en-US-john">Cooper (US)</option>
+                                                <option value="en-GB-emma">Hazel (UK)</option>
+                                                <option value="en-US-david">Daniel (US)</option>
+                                                <option value="en-US-jenny">Julia (US)</option>
+                                                <option value="en-AU-william">Shane (AU)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="echoTtsRecordingStatus" class="alert alert-info" style="display: none;">
+                                        <div class="d-flex align-items-center">
+                                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                            <span id="echoTtsRecordingStatusText">Preparing to record...</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="echoTtsRecordingResponse" class="mt-3"></div>
+                                    
+                                    <!-- TTS Processing Status Section -->
+                                    <div id="echoTtsProcessingStatus" class="mt-3" style="display: none;">
+                                        <div class="alert alert-info">
+                                            <div class="d-flex align-items-center">
+                                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                                <span id="echoTtsProcessingStatusText">Processing audio...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="echoTtsProcessingResponse" class="mt-3"></div>
+                                    
+                                    <audio id="echoTtsAudioPlayer" controls class="w-100 mt-3" style="display: none;">
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Echo Bot Section -->
+                        <div class="mt-5">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h1 class="mb-0">🎙️ Echo Bot v1 - Audio Playback</h1>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted mb-4">Record your voice and play it back to you!</p>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <button id="startRecordingBtn" class="btn btn-danger w-100">
+                                                <i class="fas fa-microphone"></i> Start Recording
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <button id="stopRecordingBtn" class="btn btn-secondary w-100" disabled>
+                                                <i class="fas fa-stop"></i> Stop Recording
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="recordingStatus" class="alert alert-info" style="display: none;">
+                                        <div class="d-flex align-items-center">
+                                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                            <span id="recordingStatusText">Preparing to record...</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="recordingResponse" class="mt-3"></div>
+                                    
+                                    <!-- Upload Status Section -->
+                                    <div id="uploadStatus" class="mt-3" style="display: none;">
+                                        <div class="alert alert-info">
+                                            <div class="d-flex align-items-center">
+                                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                                <span id="uploadStatusText">Preparing to upload...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="uploadResponse" class="mt-3"></div>
+                                    
+                                    <audio id="recordedAudioPlayer" controls class="w-100 mt-3" style="display: none;">
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h5>Features:</h5>
+                            <ul class="list-group">
+                                <li class="list-group-item">✅ Flask Backend Server</li>
+                                <li class="list-group-item">✅ HTML Frontend with Bootstrap</li>
+                                <li class="list-group-item">✅ JavaScript API Integration</li>
+                                <li class="list-group-item">✅ Text-to-Speech with Audio Playback</li>
+                                <li class="list-group-item">✅ Echo Bot v1 - Audio Playback</li>
+                                <li class="list-group-item">🆕 Echo Bot v2 - TTS Echo with Murf AI Voice</li>
+                                <li class="list-group-item">🔥 LLM Audio Assistant - Voice to AI Voice</li>
+                                <li class="list-group-item">✅ Audio File Upload to Server</li>
+                                <li class="list-group-item">✅ Speech-to-Text Transcription with AssemblyAI</li>
+                                <li class="list-group-item">✅ Google Gemini LLM Integration</li>
+                                <li class="list-group-item">✅ Responsive Design</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='script_robust.js') }}"></script>
+</body>
+</html>

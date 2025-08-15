@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Query API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        button:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .response-container {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 5px;
+            min-height: 50px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .response-text {
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        .metadata {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ccc;
+            font-size: 14px;
+            color: #666;
+        }
+        .examples {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .examples h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .example-item {
+            margin: 10px 0;
+            padding: 8px 12px;
+            background-color: white;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .example-item:hover {
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 LLM Query API Test</h1>
+        
+        <form id="queryForm">
+            <div class="form-group">
+                <label for="queryText">Enter your query:</label>
+                <textarea 
+                    id="queryText" 
+                    name="text" 
+                    placeholder="Ask me anything! For example: 'Explain machine learning' or 'Write a poem about technology'"
+                    required></textarea>
+            </div>
+            <button type="submit" id="submitBtn">Send Query</button>
+        </form>
+
+        <div id="responseContainer" class="response-container">
+            <div id="responseText" class="response-text"></div>
+            <div id="metadata" class="metadata"></div>
+        </div>
+
+        <div class="examples">
+            <h3>💡 Try these examples:</h3>
+            <div class="example-item" onclick="setQuery('Hello! How are you today?')">
+                "Hello! How are you today?"
+            </div>
+            <div class="example-item" onclick="setQuery('Explain artificial intelligence in simple terms')">
+                "Explain artificial intelligence in simple terms"
+            </div>
+            <div class="example-item" onclick="setQuery('Write a short poem about programming')">
+                "Write a short poem about programming"
+            </div>
+            <div class="example-item" onclick="setQuery('What are the benefits of using APIs in software development?')">
+                "What are the benefits of using APIs in software development?"
+            </div>
+            <div class="example-item" onclick="setQuery('Create a simple recipe for chocolate chip cookies')">
+                "Create a simple recipe for chocolate chip cookies"
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('queryForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const responseContainer = document.getElementById('responseContainer');
+        const responseText = document.getElementById('responseText');
+        const metadata = document.getElementById('metadata');
+        const queryTextarea = document.getElementById('queryText');
+
+        function setQuery(text) {
+            queryTextarea.value = text;
+            queryTextarea.focus();
+        }
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const text = queryTextarea.value.trim();
+            if (!text) return;
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            responseContainer.style.display = 'block';
+            responseContainer.className = 'response-container loading';
+            responseText.textContent = '🤔 Thinking... Please wait while I process your query.';
+            metadata.innerHTML = '';
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/llm/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.status === 'success') {
+                    responseContainer.className = 'response-container success';
+                    responseText.textContent = data.response;
+                    metadata.innerHTML = `
+                        <strong>Status:</strong> ${data.status} | 
+                        <strong>Processing Time:</strong> ${data.processing_time}s | 
+                        <strong>Message:</strong> ${data.message}
+                    `;
+                } else {
+                    throw new Error(data.detail || 'Unknown error occurred');
+                }
+            } catch (error) {
+                responseContainer.className = 'response-container error';
+                responseText.textContent = `Error: ${error.message}`;
+                metadata.innerHTML = '<strong>Status:</strong> Failed';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Query';
+            }
+        });
+    </script>
+</body>
+</html>
