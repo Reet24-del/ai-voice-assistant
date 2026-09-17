@@ -53,10 +53,10 @@ pip install fastapi uvicorn flask assemblyai httpx python-dotenv
 Edit `.env` file with your API keys:
 ```env
 # Your actual Murf AI API key
-MURF_API_KEY=ap2_358dcb52-4f0c-43b6-a714-37c54fb80d9a
+MURF_API_KEY=your_murf_api_key_here
 
 # Your actual AssemblyAI API key  
-ASSEMBLYAI_API_KEY=c32bee36fe5447ab8ea3d28044259d84
+ASSEMBLYAI_API_KEY=your_assemblyai_api_key_here
 ```
 
 ### 3. Start the System
@@ -250,8 +250,8 @@ The system handles various error scenarios:
 Make sure your `.env` file contains:
 
 ```env
-ASSEMBLYAI_API_KEY=c32bee36fe5447ab8ea3d28044259d84
-MURF_API_KEY=ap2_358dcb52-4f0c-43b6-a714-37c54fb80d9a
+ASSEMBLYAI_API_KEY=your_assemblyai_api_key_here
+MURF_API_KEY=your_murf_api_key_here
 ```
 
 ## Future Enhancements

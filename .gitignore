@@ -38,9 +38,7 @@ env.bak/
 *~
 
 # Environment variables
-.env
-.env.local
-.env.*.local
+.env*
 
 # Logs
 *.log

@@ -94,9 +94,9 @@ The script includes 5 comprehensive test scenarios:
 
 Your current API keys are already configured:
 ```env
-MURF_API_KEY=ap2_358dcb52-4f0c-43b6-a714-37c54fb80d9a
-ASSEMBLYAI_API_KEY=c32bee36fe5447ab8ea3d28044259d84
-GEMINI_API_KEY=AIzaSyCnAgDeTGDbG-vp8sHfDOIzWwdRNGL6bTo
+MURF_API_KEY=your_murf_api_key_here
+ASSEMBLYAI_API_KEY=your_assemblyai_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 ### 2. Start the Robust Server
